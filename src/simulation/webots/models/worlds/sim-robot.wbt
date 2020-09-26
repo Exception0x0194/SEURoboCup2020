@@ -1,0 +1,91 @@
+#VRML_SIM R2019b utf8
+WorldInfo {
+  basicTimeStep 20
+}
+Viewpoint {
+  orientation -0.28700894453019526 0.9447904284346113 0.15810411790338322 1.2004086600611599
+  position 4.691031590576385 1.8262293677394228 2.6422202200027587
+}
+TexturedBackground {
+  texture "noon_cloudy_countryside"
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction 5 -0.5 0
+  intensity 2
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction -5 -0.5 0
+  intensity 2
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction 0 -0.5 4
+  intensity 2
+}
+DirectionalLight {
+  ambientIntensity 1
+  direction 0 -0.5 -4
+  intensity 2
+}
+SoccerField {
+  frame1Color 0.6 0.6 0.6
+  frame2Color 0.6 0.6 0.6
+}
+DEF Ball SoccerBall {
+  translation 2.44 0.06999999999999999 0
+  radius 0.07
+  mass 0.5
+  linearDamping 0.5
+  angularDamping 0.5
+  faceUrl [
+    "textures/blackball.jpg"
+  ]
+}
+
+DEF red_1 SEURobot {
+  translation 0.75 0.365 0
+  rotation 0 1 0 3.1415926
+  robotColor 0.8 0 0
+  name "red_1"
+  controller "<extern>"
+  numberUrl [
+    "textures/number1.png"
+  ]
+}
+DEF red_2 SEURobot {
+  translation 4.0 0.365 0
+  rotation 0 1 0 3.1415926
+  robotColor 0.8 0 0
+  name "red_2"
+  controller "<extern>"
+  numberUrl [
+    "textures/number2.png"
+  ]
+}
+DEF blue_1 SEURobot {
+  translation -0.75 0.365 0
+  rotation 0 1 0 0
+  robotColor 0 0 0.8
+  name "blue_1"
+  controller "<extern>"
+  numberUrl [
+    "textures/number1.png"
+  ]
+}
+DEF blue_2 SEURobot {
+  translation -4.0 0.365 0
+  rotation 0 1 0 0
+  robotColor 0 0 0.8
+  name "blue_2"
+  controller "<extern>"
+  numberUrl [
+    "textures/number2.png"
+  ]
+}
+DEF Judge Robot {
+  name "judge"
+  controller "<extern>"
+  supervisor TRUE
+}

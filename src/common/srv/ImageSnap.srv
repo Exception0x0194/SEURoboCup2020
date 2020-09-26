@@ -1,0 +1,4 @@
+int32 type
+ObjectInfo info
+---
+uint8[] data

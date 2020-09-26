@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "${workspaceFolder}/install/common/include/**",
+                "${workspaceFolder}/src/common/include/**",
+                "${workspaceFolder}/src/seurobot/include/**",
+                "${workspaceFolder}/src/libraries/seumath/include/**",
+                "${workspaceFolder}/src/libraries/basic_parser/include/**",
+                "/usr/local/webots/include/controller/cpp/**",
+                "/usr/include/**",
+                "/opt/ros/foxy/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu18",
+            "cppStandard": "gnu++14"
+        }
+    ],
+    "version": 4
+}
