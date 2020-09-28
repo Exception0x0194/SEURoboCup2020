@@ -45,12 +45,17 @@ source ~/.bashrc
 
 ### 运行
 
-新建一个终端，输入：
+若修改过 [controller.cpp](src/simulation/controller/src/controller.cpp)，则需要重新编译：
 ```Shell
-ros2 launch controller controller_launch.py
+colcon build
 ```
 
 新建一个终端，输入：
 ```Shell
 ros2 launch start start_launch.py
+```
+
+新建一个终端，输入：
+```Shell
+ros2 launch controller controller_launch.py
 ```
