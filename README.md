@@ -45,17 +45,25 @@ source ~/.bashrc
 
 ### 运行
 
-若修改过 [controller.cpp](src/simulation/controller/src/controller.cpp)，则需要重新编译：
-```Shell
-colcon build
-```
++ 启动仿真相关的节点  
+    新建一个终端，输入：
+    ```Shell
+    ros2 launch start start_launch.py
+    ```
 
-新建一个终端，输入：
-```Shell
-ros2 launch start start_launch.py
-```
++ 启动比赛控制器  
+    新建一个终端，输入：
+    ```Shell
+    ros2 run gamectrl gamectrl
+    ```
 
-新建一个终端，输入：
-```Shell
-ros2 launch controller controller_launch.py
-```
++ 启动机器人的控制节点  
+    新建一个终端，输入：
+    ```Shell
+    ros2 launch player player_launch.py
+    ```
+
++ 若修改过 [player.cpp](src/player/src/player.cpp)，则需要重新编译：
+    ```Shell
+    colcon build
+    ```
