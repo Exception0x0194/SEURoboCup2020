@@ -2,6 +2,8 @@
 
 东南大学 Robocup Kidsize 2020年校赛代码
 
+遇到问题请先行使用搜索引擎，或查阅 [FAQ](https://gitee.com/robocup/SEURoboCup2020/wikis/)
+
 ## 环境配置
 
 - ROS2
@@ -60,7 +62,9 @@ source ~/.bashrc
 + 启动机器人的控制节点  
     新建一个终端，输入：
     ```Shell
-    ros2 launch player player_launch.py
+    ros2 launch player player_launch.py color:=red
+    # red 为机器人颜色，亦可使用 blue，即
+    # ros2 launch player player_launch.py color:=blue
     ```
 
 + 若修改过 [player.cpp](src/player/src/player.cpp)，则需要重新编译：
