@@ -2,7 +2,7 @@
 
 以下步骤均在 Ubuntu 20.04.1 测试通过，18.04 下可能存在少量问题。
 
-Ubuntu 安装教程请参考 [Ubuntu16.04的安装教程](https://github.com/Sciroccogti/SEURoboCup2019Kidsize/blob/master/EnvSetupGuide.md)
+Ubuntu 安装教程请参考 [Ubuntu20.04的安装教程](./os_install.md)
 
 ## ROS2 安装
 

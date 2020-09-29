@@ -10,8 +10,7 @@
 - Webots R2020b：[下载链接](https://github.com/cyberbotics/webots/releases/download/R2020b-rev1/webots_2020b-rev1_amd64.deb)（国内下载较慢，可以选择从群内下载）
 
 ROS2 安装教程：
-- [Windows 10](docs/windows.md)
-- [Ubuntu 18.04/20.04](docs/ubuntu.md)
+- [Ubuntu 20.04](docs/ubuntu.md)
 
 Webots 安装：
 ```Shell
