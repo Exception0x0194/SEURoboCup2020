@@ -6,11 +6,11 @@ int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
     QApplication app(argc, argv);
-    std::string cfg = "";
+    std::string cfg = "teams.cfg";
     if(argc > 1) {
         cfg = std::string(argv[1]);
     }
-    StartDlg sdlg("/home/rocky/teams.cfg");
+    StartDlg sdlg(cfg);
     sdlg.exec();
     if(sdlg.redName.size() > 0) {
         CtrlWindow foo(sdlg.redName, sdlg.blueName);

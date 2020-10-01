@@ -29,6 +29,12 @@ int main(int argc, char ** argv)
         auto imuData = imuSubscriber->GetData();
         auto image = imageSubscriber->GetImage().clone();
 
+        // write your code here
+        if (robotName.back() == '1')
+        {
+            btask.step = -1; // 1 号机器人后退
+        }
+
         bodyTaskNode->Publish(btask);
         headTaskNode->Publish(htask);
         loop_rate.sleep();
