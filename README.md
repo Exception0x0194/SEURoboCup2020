@@ -16,6 +16,7 @@ Webots 安装：
 ```Shell
 sudo dpkg -i path/to/webots.deb # 请自行修改安装文件路径
 sudo apt install -f
+source /opt/ros/foxy/setup.bash
 sudo apt install ros-$ROS_DISTRO-webots-ros2
 ```
 
