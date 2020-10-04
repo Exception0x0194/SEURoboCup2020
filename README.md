@@ -36,7 +36,7 @@ colcon build
 ```Shell
 sudo rosdep init
 ```
-若报错则参考：[Q4 sudo rosdep init 报错](https://gitee.com/robocup/SEURoboCup2020/wikis/软件环境?sort_id=2923421)
+若报错则参考：[Q4 sudo rosdep init 报错](https://gitee.com/robocup/SEURoboCup2020/wikis/软件环境?sort_id=2923421#q4-sudo-rosdep-init报错)
 ```Shell
 rosdep update
 echo "export WEBOTS_HOME=/usr/local/webots" >> ~/.bashrc
