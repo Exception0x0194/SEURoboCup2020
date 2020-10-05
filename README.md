@@ -52,11 +52,12 @@ source ~/.bashrc
 + 启动仿真相关的节点  
     新建一个终端，输入：
     ```Shell
+    cd ~
     ros2 launch start start_launch.py
     ```
 
 + 启动比赛控制器  
-    新建一个终端，输入：
+    新建一个终端，进入到`SEURoboCup2020`路径，输入：
     ```Shell
     ros2 run gamectrl gamectrl
     ```
