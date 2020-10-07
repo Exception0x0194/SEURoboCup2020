@@ -17,7 +17,8 @@ Ubuntu 安装教程请参考 [Ubuntu20.04的安装教程](./os_install.md)
 
 ```Shell
 sudo apt update && sudo apt install curl gnupg2 lsb-release
-curl -s https://gitee.com/Sciroccogti/SEURoboCup2020/raw/master/docs/ros.asc | sudo apt-key add -
+wget --no-check-certificate -qO - https://gitee.com/Sciroccogti/SEURoboCup2020/raw/master/docs/ros.asc | sudo apt-key add -
+
 ```
 
 **此处为了便于国内访问，修改了原教程中的软件源地址**
