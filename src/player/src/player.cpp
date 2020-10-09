@@ -8,7 +8,7 @@ int main(int argc, char ** argv)
     if (argc > 1) {
         robotName = std::string(argv[1]);
     }
-
+    auto playerNode = std::make_shared<rclcpp::Node>(robotName + "_player");
     common::msg::BodyTask btask;
     common::msg::HeadTask htask;
     btask.type = btask.TASK_WALK;
@@ -20,15 +20,26 @@ int main(int argc, char ** argv)
     auto headTaskNode = std::make_shared<HeadTaskPublisher>(robotName);
     auto imageSubscriber = std::make_shared<ImageSubscriber>(robotName);
     auto imuSubscriber = std::make_shared<ImuDataSubscriber>(robotName);
+    auto headSubscriber = std::make_shared<HeadAngleSubscriber>(robotName);
+    auto resImgPublisher = std::make_shared<ResultImagePublisher>(robotName);
     rclcpp::WallRate loop_rate(10.0);
+
     while (rclcpp::ok()) {
         rclcpp::spin_some(bodyTaskNode);
         rclcpp::spin_some(headTaskNode);
         rclcpp::spin_some(imageSubscriber);
         rclcpp::spin_some(imuSubscriber);
+        rclcpp::spin_some(headSubscriber);
+        rclcpp::spin_some(resImgPublisher);
         auto imuData = imuSubscriber->GetData();
         auto image = imageSubscriber->GetImage().clone();
+        auto headAngle = headSubscriber->GetData();
 
+        if (!image.empty()) {
+            // 在这里写图像处理
+            cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
+            resImgPublisher->Publish(image); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
+        }
         // write your code here
         if (robotName.back() == '1')
         {

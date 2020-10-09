@@ -12,6 +12,7 @@
 #include <common/msg/head_angles.hpp>
 #include <common/msg/led_task.hpp>
 #include <common/msg/imu_data.hpp>
+#include <common/msg/head_angles.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/image_encodings.hpp>
 
@@ -64,6 +65,22 @@ public:
     rclcpp::Publisher<common::msg::ImuData>::SharedPtr publisher_;
 };
 
+class HeadAnglePublisher : public rclcpp::Node
+{
+public:
+    HeadAnglePublisher(std::string robot_name): Node(robot_name + "_head_angle_publisher")
+    {
+        publisher_ = this->create_publisher<common::msg::HeadAngles>(robot_name + "/sensor/joint/head", 5);
+    }
+
+    void Publish(const common::msg::HeadAngles& data)
+    {
+        publisher_->publish(data);
+    }
+
+    rclcpp::Publisher<common::msg::HeadAngles>::SharedPtr publisher_;
+};
+
 class SimRobot: public webots::Robot
 {
 public:
@@ -79,6 +96,7 @@ private:
 
     std::shared_ptr<ImagePublisher> mImagePublisher;
     std::shared_ptr<ImuPublisher> mImuPublisher;
+    std::shared_ptr<HeadAnglePublisher> mHeadPublisher;
 
     void setPositions();
     void checkFall();

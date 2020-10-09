@@ -10,10 +10,13 @@ auto image = imageSubscriber->GetImage().clone();
 ```cpp
 auto imuData = imuSubscriber->GetData();
 ```
-IMU数据通过上面的接口获得机器人的IMU数据，参赛队伍主要需要关心的是其中的yaw变量，用于表示机器人当前的朝向，具体角度多少代表那个方向请自行测试
+IMU数据通过上面的接口获得，参赛队伍主要需要关心的是其中的yaw变量，用于表示机器人当前的朝向，具体角度多少代表那个方向请自行测试
 
 ## 头部关节角数据
-待添加
+```cpp
+auto headAngle = headSubscriber->GetData();
+```
+头部关节数据通过上面的接口获得，参赛队伍主要需要关心的是其中的yaw和pitch变量，用于表示机器人头部的方向和俯仰
 
 ## BodyTask
 BodyTask用于控制机器的身体运动，其定义和说明如下：
@@ -40,3 +43,6 @@ float64 yaw
 float64 pitch
 ```
 其中```mode```目前没有使用，```yaw```表示头部的方向，```pitch```表示头部的俯仰，单位均为度，具体的正负对应关系请自行测试。
+
+## 处理后的图像如何查看
+代码中已经提供接口，通过提供的接口发布处理后的图像后，打开一个新的终端，运行rqt工具， 在Plugins->Visualization下选择Image View，之后在界面中选择格式为xxxx/result/image的话题，即可查看处理好的图像，其中xxxx表示机器人名称

@@ -6,6 +6,7 @@
 #include <common/msg/body_task.hpp>
 #include <common/msg/head_task.hpp>
 #include <common/msg/imu_data.hpp>
+#include <common/msg/head_angles.hpp>
 #include <opencv4/opencv2/opencv.hpp>
 
 class BodyTaskPublisher : public rclcpp::Node
@@ -38,6 +39,34 @@ public:
     }
 
     rclcpp::Publisher<common::msg::HeadTask>::SharedPtr publisher_;
+};
+
+class ResultImagePublisher : public rclcpp::Node
+{
+public:
+    ResultImagePublisher(std::string robot_name): Node(robot_name + "_result_image_publisher")
+    {
+        publisher_ = this->create_publisher<sensor_msgs::msg::Image>(robot_name + "/result/image", 5);
+    }
+
+    void Publish(cv::Mat &mat)
+    {
+        if (mat.empty()) {
+            return;
+        }
+        auto message = sensor_msgs::msg::Image();
+        message.header.stamp = rclcpp::Time();
+        message.header.frame_id = "result";
+        message.width = mat.cols;
+        message.height = mat.rows;
+        message.step = mat.cols * mat.channels();
+        message.encoding = sensor_msgs::image_encodings::RGB8;
+        message.data.resize(mat.cols * mat.rows * mat.channels());
+        memcpy(&message.data[0], mat.data, mat.cols * mat.rows * mat.channels());
+        publisher_->publish(message);
+    }
+
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
 };
 
 class ImuDataSubscriber: public rclcpp::Node
@@ -90,4 +119,29 @@ private:
     sensor_msgs::msg::Image image_;
     cv::Mat cvMat_;
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
+};
+
+class HeadAngleSubscriber: public rclcpp::Node
+{
+public:
+    HeadAngleSubscriber(std::string robotName): Node(robotName + "_head_angle_subscriber")
+    {
+        subscription_ = this->create_subscription<common::msg::HeadAngles>(
+            robotName + "/sensor/joint/head", 5, std::bind(&HeadAngleSubscriber::topic_callback, this,
+            std::placeholders::_1));
+    }
+
+    const common::msg::HeadAngles& GetData()
+    {
+        return headAngles_;
+    }
+
+private:
+    void topic_callback(const common::msg::HeadAngles::SharedPtr msg)
+    {
+        headAngles_ = *msg;
+    }
+
+    common::msg::HeadAngles headAngles_;
+    rclcpp::Subscription<common::msg::HeadAngles>::SharedPtr subscription_;
 };

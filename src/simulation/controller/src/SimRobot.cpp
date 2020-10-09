@@ -36,6 +36,7 @@ SimRobot::SimRobot(std::string robot_name) : Robot(), robotName(robot_name)
 
     mImagePublisher = std::make_shared<ImagePublisher>(robotName);
     mImuPublisher = std::make_shared<ImuPublisher>(robotName);
+    mHeadPublisher = std::make_shared<HeadAnglePublisher>(robotName);
 }
 
 int SimRobot::myStep()
@@ -48,8 +49,10 @@ int SimRobot::myStep()
     if (totalTime % (5 * mTimeStep) == 0) {
         mImagePublisher->Publish(mCamera->getImage(), mCamera->getWidth(), mCamera->getHeight());
     }
+    mHeadPublisher->Publish(mHAngles);
     rclcpp::spin_some(mImagePublisher);
     rclcpp::spin_some(mImuPublisher);
+    rclcpp::spin_some(mHeadPublisher);
     return step(mTimeStep);
 }
 
@@ -72,14 +75,7 @@ void SimRobot::checkFall()
     imu.roll = seumath::rad2deg(rpy[0]);
     imu.fall = fallType;
     imu.stamp = rclcpp::Time().nanoseconds();
-    if(imuReset) {
-        imuReset = false;
-        mInitYaw = imu.yaw;
-    }
-    imu.yaw = seumath::normalizeRad<double>(imu.yaw - mInitYaw);
     mImuPublisher->Publish(imu);
-    // printf("roll=%f, pitch=%f, yaw=%f\n", rpy[0], rpy[1], rpy[2]);
-    // printf("%d\n", fallType);
 }
 
 void SimRobot::wait(int ms)
