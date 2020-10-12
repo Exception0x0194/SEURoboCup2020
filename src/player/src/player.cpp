@@ -22,6 +22,7 @@ int main(int argc, char **argv)
     auto imuSubscriber = std::make_shared<ImuDataSubscriber>(robotName);
     auto headSubscriber = std::make_shared<HeadAngleSubscriber>(robotName);
     auto resImgPublisher = std::make_shared<ResultImagePublisher>(robotName);
+    // auto resImgPublisher2 = std::make_shared<ResultImagePublisher>("Img");
     rclcpp::WallRate loop_rate(10.0);
 
     while (rclcpp::ok())
@@ -32,6 +33,7 @@ int main(int argc, char **argv)
         rclcpp::spin_some(imuSubscriber);
         rclcpp::spin_some(headSubscriber);
         rclcpp::spin_some(resImgPublisher);
+        // rclcpp::spin_some(resImgPublisher2);
         auto imuData = imuSubscriber->GetData();
         auto image = imageSubscriber->GetImage().clone();
         auto headAngle = headSubscriber->GetData();
@@ -40,6 +42,10 @@ int main(int argc, char **argv)
         {
             // 在这里写图像处理
             cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
+            // auto grey = image.clone();
+            // cv::cvtColor(image, grey, cv::COLOR_BGR2GRAY);
+            // cv::cvtColor(grey, grey, cv::COLOR_GRAY2BGR);
+            // resImgPublisher2->Publish(grey);
             resImgPublisher->Publish(image); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
         // write your code here
