@@ -40,10 +40,21 @@ int main(int argc, char **argv)
         {
             // 在这里写图像处理
             cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
-            resImgPublisher->Publish(image); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
+            auto image = imageSubscriber->GetImage().clone();
+            auto imuData = imuSubscriber->GetData();
+            auto headAngle = headSubscriber->GetData();
+            cv::Mat grayImage, binImage, outputImage;
+            cv::cvtColor(image,grayImage,cv::COLOR_BGR2GRAY);
+            cv::medianBlur(grayImage,grayImage,3);
+            cv::threshold(grayImage, binImage, 175, 255, cv::THRESH_BINARY);
+            cv::cvtColor(binImage,outputImage,cv::COLOR_GRAY2BGR);
+            resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
-        // write your code here
-        btask.step = -1;
+        
+        if (robotName.back() == '1')
+        {
+            btask.step = 2; // 1 号机器人前进
+        }
 
         bodyTaskNode->Publish(btask);
         headTaskNode->Publish(htask);
