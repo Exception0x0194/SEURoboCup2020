@@ -43,7 +43,7 @@ int main(int argc, char **argv)
             resImgPublisher->Publish(image); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
         // write your code here
-        btask.step = -1;
+        btask.step = 2;
 
         bodyTaskNode->Publish(btask);
         headTaskNode->Publish(htask);

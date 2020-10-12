@@ -13,7 +13,8 @@
                 "${workspaceFolder}/src/libraries/basic_parser/include/**",
                 "/usr/local/webots/include/controller/cpp/**",
                 "/usr/include/**",
-                "/opt/ros/foxy/include/**"
+                "/opt/ros/foxy/include/**",
+                "${workspaceFolder}/install/common/include"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",
