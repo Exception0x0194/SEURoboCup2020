@@ -39,15 +39,29 @@ int main(int argc, char **argv)
         if (!image.empty())
         {
             // 在这里写图像处理
-            cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
+            //cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
             auto image = imageSubscriber->GetImage().clone();
             auto imuData = imuSubscriber->GetData();
             auto headAngle = headSubscriber->GetData();
-            cv::Mat grayImage, binImage, outputImage;
+            cv::Mat grayImage, binImage, outputImage, kernel, dstImage;
             cv::cvtColor(image,grayImage,cv::COLOR_BGR2GRAY);
             cv::medianBlur(grayImage,grayImage,3);
             cv::threshold(grayImage, binImage, 175, 255, cv::THRESH_BINARY);
-            cv::cvtColor(binImage,outputImage,cv::COLOR_GRAY2BGR);
+
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
+            cv::morphologyEx(binImage, dstImage, cv::MORPH_CLOSE, kernel, cv::Point(-1, -1));
+            kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(-1, -1));
+            cv::morphologyEx(dstImage, dstImage, cv::MORPH_OPEN, kernel, cv::Point(-1, -1));
+
+            std::vector<cv::Vec3f> circles;
+            cv::HoughCircles(dstImage,circles,cv::HOUGH_GRADIENT,1,100,45,30,45,220);
+            for(size_t i = 0; i < circles.size(); i++)
+            {
+                cv::Vec3f c = circles[i];
+                cv::circle(dstImage, cv::Point(c[0], c[1]), c[2], cv::Scalar(0,255,255), 3, cv::LINE_AA);
+            }
+
+            cv::cvtColor(dstImage,outputImage,cv::COLOR_GRAY2BGR);
             resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
         
