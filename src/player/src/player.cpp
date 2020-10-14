@@ -41,7 +41,6 @@ int main(int argc, char **argv)
         if (!image.empty())
         {
             // 在这里写图像处理
-            cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
             auto image = imageSubscriber->GetImage().clone();
             auto imuData = imuSubscriber->GetData();
             auto headAngle = headSubscriber->GetData();
@@ -50,6 +49,7 @@ int main(int argc, char **argv)
             cv::medianBlur(grayImage, grayImage, 3);
             cv::threshold(grayImage, binImage, 175, 255, cv::THRESH_BINARY);
             cv::cvtColor(binImage, outputImage, cv::COLOR_GRAY2BGR);
+            cv::circle(outputImage, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0), 10);
             resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
 
