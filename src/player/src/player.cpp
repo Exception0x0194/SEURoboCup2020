@@ -1,5 +1,11 @@
 #include "topics.hpp"
 
+enum status
+{
+    REACHING_BALL,
+    KICKING_BALL
+} currentStatus;
+
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
@@ -16,13 +22,14 @@ int main(int argc, char **argv)
     btask.step = 0.03;
     htask.yaw = 0.0;
     htask.pitch = 45.0;
+    currentStatus = REACHING_BALL;
+    cv::Vec3f position;
     auto bodyTaskNode = std::make_shared<BodyTaskPublisher>(robotName);
     auto headTaskNode = std::make_shared<HeadTaskPublisher>(robotName);
     auto imageSubscriber = std::make_shared<ImageSubscriber>(robotName);
     auto imuSubscriber = std::make_shared<ImuDataSubscriber>(robotName);
     auto headSubscriber = std::make_shared<HeadAngleSubscriber>(robotName);
     auto resImgPublisher = std::make_shared<ResultImagePublisher>(robotName);
-    // auto resImgPublisher2 = std::make_shared<ResultImagePublisher>("Img");
     rclcpp::WallRate loop_rate(10.0);
 
     while (rclcpp::ok())
@@ -40,31 +47,48 @@ int main(int argc, char **argv)
 
         if (!image.empty())
         {
-            // 在这里写图像处理
-            //cv::circle(image, cv::Point(0, 0), 40, cv::Scalar(255, 0, 0));
+            // Image processing
             auto image = imageSubscriber->GetImage().clone();
             auto imuData = imuSubscriber->GetData();
             auto headAngle = headSubscriber->GetData();
-            cv::Mat grayImage, binImage, outputImage, kernel, dstImage;
-            cv::cvtColor(image, grayImage, cv::COLOR_BGR2GRAY);
-            cv::threshold(grayImage, binImage, 230, 255, cv::THRESH_BINARY);
+
+            cv::Mat binImage;
+            cv::cvtColor(image, binImage, cv::COLOR_BGR2GRAY);
+            cv::threshold(binImage, binImage, 230, 255, cv::THRESH_BINARY);
             cv::GaussianBlur(binImage, binImage, cv::Size(5, 5), 3, 3);
 
-            std::vector<cv::Vec3f> circles;
-            cv::HoughCircles(binImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
-            cv::cvtColor(binImage, outputImage, cv::COLOR_GRAY2BGR);
-            for (size_t i = 0; i < circles.size(); i++)
+            position = (0, 0, 0);
+            if (currentStatus == REACHING_BALL)
             {
-                cv::Vec3f c = circles[i];
-                cv::circle(outputImage, cv::Point(c[0], c[1]), c[2], cv::Scalar(0, 255, 255), 5);
+                std::vector<cv::Vec3f> circles;
+                cv::HoughCircles(binImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
+                for (size_t i = 0; i < circles.size(); i++)
+                {
+                    position[0] += circles[i][0];
+                    position[1] += circles[i][1];
+                    position[2] += circles[i][2];
+                }
+                position[0] /= circles.size(), position[1] /= circles.size(), position[2] /= circles.size();
             }
-            cv::circle(outputImage, cv::Point(0, 0), 50, cv::Scalar(0, 255, 255), 5);
-            resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
-        }
+            else if (currentStatus == KICKING_BALL)
+            {
+                //TODO
+            }
 
-        if (robotName.back() == '1')
+            cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
+            if (currentStatus == REACHING_BALL)
+            {
+                cv::circle(binImage, cv::Point(position[0], position[1]), position[2], cv::Scalar(0, 255, 255), 5);
+            }
+            else if (currentStatus == KICKING_BALL)
+            {
+                //TODO
+            }
+            resImgPublisher->Publish(binImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
+        }
+        // Actions
+        if (currentStatus == REACHING_BALL)
         {
-            btask.step = 2; // 1 号机器人前进
         }
 
         bodyTaskNode->Publish(btask);
