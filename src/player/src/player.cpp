@@ -9,7 +9,7 @@ enum status
 } currentStatus;
 
 const float ballThresholdLeft = 0.375, ballThresholdRight = 0.5;
-const float ballThresholdBottom = 0.6;
+const float ballThresholdBottom = 0.65;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
 const float turningPerPixel = 0.03, lateralMovingPerPixel = 0.001;
@@ -86,15 +86,12 @@ int main(int argc, char **argv)
                     }
                     ballPosition[0] /= circles.size(), ballPosition[1] /= circles.size(), ballPosition[2] /= circles.size();
                     cv::circle(outputImage, cv::Point(ballPosition[0], ballPosition[1]), ballPosition[2], cv::Scalar(255, 0, 0), 5);
-                    if (ballPosition[1] > ballThresholdBottom * image.rows)
-                    {
-                        currentStatus = KICKING_BALL;
-                    }
                 }
             }
             if (currentStatus == KICKING_BALL)
             {
-                cv::threshold(binImage, binImage, 180, 210, cv::THRESH_BINARY);
+                cv::threshold(binImage, binImage, 150, 200, cv::THRESH_BINARY);
+                cv::GaussianBlur(binImage, binImage, cv::Size(5, 5), 3, 3);
                 htask.set__pitch(0);
                 std::vector<cv::Vec4i> lines;
                 cv::HoughLinesP(binImage, lines, 1, CV_PI / 180, 50, 20, 30);
@@ -121,8 +118,15 @@ int main(int argc, char **argv)
         if (currentStatus == REACHING_BALL && ballPosition[2] != 0)
         {
             btask.set__type(btask.TASK_WALK);
+            if (ballPosition[1] > ballThresholdBottom * image.rows)
+            {
+                currentStatus = KICKING_BALL;
+                btask.set__step(0);
+                btask.set__turn(0);
+            }
             if (ballPosition[0] > ballThresholdRight * image.cols || ballPosition[0] < ballThresholdLeft * image.cols)
             {
+                currentStatus = REACHING_BALL;
                 btask.set__turn((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
                 btask.set__step(0);
                 btask.set__lateral(0);
@@ -139,8 +143,6 @@ int main(int argc, char **argv)
             cv::Vec2f gatePosition;
             gatePosition[0] = (linePosition[0] + linePosition[2]) / 2;
             gatePosition[1] = (linePosition[1] + linePosition[3]) / 2;
-            btask.set__step(0);
-            btask.set__turn(0);
             if (gatePosition[0] > gateThresholdRight * image.cols || gatePosition[0] < gateThresholdLeft * image.cols)
             {
                 btask.set__turn((0.5 * image.cols - gatePosition[0]) * turningPerPixel); // 0.5 is gateThresholdMiddle
