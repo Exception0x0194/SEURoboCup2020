@@ -12,12 +12,12 @@
 class BodyTaskPublisher : public rclcpp::Node
 {
 public:
-    BodyTaskPublisher(std::string robot_name): Node(robot_name + "_body_task_publisher")
+    BodyTaskPublisher(std::string robot_name) : Node(robot_name + "_body_task_publisher")
     {
         publisher_ = this->create_publisher<common::msg::BodyTask>(robot_name + "/task/body", 5);
     }
 
-    void Publish(const common::msg::BodyTask& data)
+    void Publish(const common::msg::BodyTask &data)
     {
         publisher_->publish(data);
     }
@@ -28,12 +28,12 @@ public:
 class HeadTaskPublisher : public rclcpp::Node
 {
 public:
-    HeadTaskPublisher(std::string robot_name): Node(robot_name + "_head_task_publisher")
+    HeadTaskPublisher(std::string robot_name) : Node(robot_name + "_head_task_publisher")
     {
         publisher_ = this->create_publisher<common::msg::HeadTask>(robot_name + "/task/head", 5);
     }
 
-    void Publish(const common::msg::HeadTask& data)
+    void Publish(const common::msg::HeadTask &data)
     {
         publisher_->publish(data);
     }
@@ -44,14 +44,15 @@ public:
 class ResultImagePublisher : public rclcpp::Node
 {
 public:
-    ResultImagePublisher(std::string robot_name): Node(robot_name + "_result_image_publisher")
+    ResultImagePublisher(std::string robot_name) : Node(robot_name + "_result_image_publisher")
     {
         publisher_ = this->create_publisher<sensor_msgs::msg::Image>(robot_name + "/result/image", 5);
     }
 
     void Publish(cv::Mat &mat)
     {
-        if (mat.empty()) {
+        if (mat.empty())
+        {
             return;
         }
         auto message = sensor_msgs::msg::Image();
@@ -69,17 +70,16 @@ public:
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr publisher_;
 };
 
-class ImuDataSubscriber: public rclcpp::Node
+class ImuDataSubscriber : public rclcpp::Node
 {
 public:
-    ImuDataSubscriber(std::string robotName): Node(robotName + "_imu_data_subscriber_player")
+    ImuDataSubscriber(std::string robotName) : Node(robotName + "_imu_data_subscriber_player")
     {
         subscription_ = this->create_subscription<common::msg::ImuData>(
-            robotName + "/sensor/imu", 5, std::bind(&ImuDataSubscriber::topic_callback, this,
-            std::placeholders::_1));
+            robotName + "/sensor/imu", 5, std::bind(&ImuDataSubscriber::topic_callback, this, std::placeholders::_1));
     }
 
-    const common::msg::ImuData& GetData()
+    const common::msg::ImuData &GetData()
     {
         return imuData_;
     }
@@ -94,14 +94,13 @@ private:
     rclcpp::Subscription<common::msg::ImuData>::SharedPtr subscription_;
 };
 
-class ImageSubscriber: public rclcpp::Node
+class ImageSubscriber : public rclcpp::Node
 {
 public:
-    ImageSubscriber(std::string robotName): Node(robotName + "_image_data_subscriber")
+    ImageSubscriber(std::string robotName) : Node(robotName + "_image_data_subscriber")
     {
         subscription_ = this->create_subscription<sensor_msgs::msg::Image>(
-            robotName + "/sensor/image", 5, std::bind(&ImageSubscriber::topic_callback, this,
-            std::placeholders::_1));
+            robotName + "/sensor/image", 5, std::bind(&ImageSubscriber::topic_callback, this, std::placeholders::_1));
     }
 
     cv::Mat GetImage()
@@ -121,17 +120,16 @@ private:
     rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_;
 };
 
-class HeadAngleSubscriber: public rclcpp::Node
+class HeadAngleSubscriber : public rclcpp::Node
 {
 public:
-    HeadAngleSubscriber(std::string robotName): Node(robotName + "_head_angle_subscriber")
+    HeadAngleSubscriber(std::string robotName) : Node(robotName + "_head_angle_subscriber")
     {
         subscription_ = this->create_subscription<common::msg::HeadAngles>(
-            robotName + "/sensor/joint/head", 5, std::bind(&HeadAngleSubscriber::topic_callback, this,
-            std::placeholders::_1));
+            robotName + "/sensor/joint/head", 5, std::bind(&HeadAngleSubscriber::topic_callback, this, std::placeholders::_1));
     }
 
-    const common::msg::HeadAngles& GetData()
+    const common::msg::HeadAngles &GetData()
     {
         return headAngles_;
     }
