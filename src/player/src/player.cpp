@@ -74,12 +74,31 @@ int main(int argc, char **argv)
                 cv::threshold(whiteBinImage, whiteBinImage, 220, 255, cv::THRESH_BINARY);
                 cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
                 cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
+                cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(5, 5), 3, 3);
 
                 std::vector<cv::Vec3f> circles;
                 cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 5, 220);
+                if (circles.size())
+                {
+                    for (int i = 0; i < circles.size(); i++)
+                        ballPosition += circles[i];
+                    ballPosition /= (int)circles.size();
+                }
+                else
+                {
+                    //TODO
+                }
             }
             if (currentStatus == KICKING_BALL)
             {
+                auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), gateBinImage = grayImage.clone();
+                cv::threshold(whiteBinImage, whiteBinImage, 190, 255, cv::THRESH_BINARY_INV);
+                cv::threshold(blackBinImage, blackBinImage, 180, 255, cv::THRESH_BINARY);
+                cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
+                cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
+
+                std::vector<cv::Vec4i> lines;
+                cv::HoughLinesP(gateBinImage, lines, );
             }
 
             // cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
