@@ -8,12 +8,12 @@ enum status
     KICKING_ACTION
 } currentStatus;
 
-const float ballThresholdLeft = 0.38, ballThresholdRight = 0.45;
+const float ballThresholdLeft = 0.38, ballThresholdRight = 0.44;
 // const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
-const float ballThresholdBottom = 0.8;
+const float ballThresholdBottom = 0.75;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
-const float gateThresholdLeft = 0.43, gateThresholdRight = 0.57;
-const float turningPerPixel = 0.015, lateralMovingPerPixel = -0.00002;
+const float gateThresholdLeft = 0.45, gateThresholdRight = 0.55;
+const float turningPerPixel = 0.02, lateralMovingPerPixel = -0.000025;
 
 int main(int argc, char **argv)
 {
