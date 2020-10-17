@@ -8,12 +8,12 @@ enum status
     KICKING_ACTION
 } currentStatus;
 
-//const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
-const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
-const float ballThresholdBottom = 0.65;
+const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
+// const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
+const float ballThresholdBottom = 0.6;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
-const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
-const float turningPerPixel = 0.05, lateralMovingPerPixel = -0.0001;
+const float gateThresholdLeft = 0.43, gateThresholdRight = 0.57;
+const float turningPerPixel = 0.05, lateralMovingPerPixel = -0.000012;
 
 int main(int argc, char **argv)
 {
@@ -69,23 +69,31 @@ int main(int argc, char **argv)
             ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
             gatePosition[0] = gatePosition[1] = gatePosition[2] = gatePosition[3] = 0;
 
-            if (currentStatus == REACHING_BALL)
+            if (1)
             {
                 auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), ballBinImage = grayImage.clone();
                 cv::threshold(whiteBinImage, whiteBinImage, 220, 255, cv::THRESH_BINARY);
                 cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
                 cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
-                cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(5, 5), 3, 3);
+                cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(7, 7), 1, 1);
+                //cv::medianBlur(ballBinImage, ballBinImage, 5);
+                cv::Canny(ballBinImage, ballBinImage, 75, 225);
+
+                cv::cvtColor(ballBinImage, outputImage, cv::COLOR_GRAY2BGR);
 
                 std::vector<cv::Vec3f> circles;
-                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 5, 220);
+                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
                 if (circles.size())
                 {
                     for (int i = 0; i < circles.size(); i++)
                     {
                         ballPosition += circles[i];
                         ballPosition /= (int)circles.size();
+                        if (ballPosition[2] == 0 || circles[i][1] > ballPosition[1])
+                            ballPosition = circles[i];
+                        cv::circle(outputImage, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(0, 255, 255), 5);
                     }
+                    cv::circle(outputImage, cv::Point(ballPosition[0], ballPosition[1]), ballPosition[2], cv::Scalar(255, 0, 0), 5);
                 }
                 else
                 {
@@ -100,27 +108,21 @@ int main(int argc, char **argv)
                 cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
                 cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(3, 3), 3, 3);
                 cv::threshold(gateBinImage, gateBinImage, 120, 255, cv::THRESH_BINARY);
-                cv::Canny(gateBinImage, gateBinImage, 75, 225);
 
                 std::vector<cv::Vec4i> lines;
                 int lineNumber = 0;
-                cv::HoughLinesP(gateBinImage, lines, 1, CV_PI / 180, 50, 50, 2);
+                cv::HoughLinesP(gateBinImage, lines, 1, CV_PI / 180, 50, 50, 10);
                 if (lines.size())
                 {
                     for (int i = 0; i < lines.size(); i++)
                     {
-                        if (lines[i][0] != lines[i][2] && (abs(float(lines[i][1] - lines[i][3]) / (lines[i][0] - lines[i][2])) > 0.5))
+                        if (lines[i][0] != lines[i][2] && (abs(float(lines[i][1] - lines[i][3]) / (lines[i][0] - lines[i][2])) < 0.5))
                         {
                             gatePosition += lines[i];
                             lineNumber++;
                         }
                     }
                     gatePosition /= (lineNumber ? lineNumber : 1);
-                }
-                cv::cvtColor(gateBinImage, outputImage, cv::COLOR_GRAY2BGR);
-                for (int i = 0; i < lines.size(); i++)
-                {
-                    cv::line(outputImage, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255, 255, 0), 5);
                 }
             }
             else
@@ -156,7 +158,6 @@ int main(int argc, char **argv)
                     btask.turn = 0;
                     btask.step = 0;
                     htask.pitch = 0;
-                    btask.type = btask.TASK_ACT;
                     currentStatus = KICKING_BALL;
                     cnt = 0;
                 }
@@ -167,7 +168,6 @@ int main(int argc, char **argv)
             htask.pitch = 0;
             btask.turn = 0;
             btask.step = 0;
-            cnt++;
             int gatePositionAvg = (gatePosition[0] + gatePosition[2]) / 2;
             if (gatePositionAvg < gateThresholdLeft * image.cols || gatePositionAvg > gateThresholdRight * image.cols)
             {
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
         else if (currentStatus == KICKING_ACTION)
         {
             cnt++;
-            if (1)
+            if (cnt >= 5)
             {
                 currentStatus = REACHING_BALL;
                 btask.type = btask.TASK_WALK;
