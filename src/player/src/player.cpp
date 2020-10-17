@@ -9,7 +9,7 @@ enum status
 } currentStatus;
 
 const float ballThresholdLeft = 0.375, ballThresholdRight = 0.5;
-const float ballThresholdBottom = 0.65;
+const float ballThresholdBottom = 0.75;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
 const float turningPerPixel = 0.03, lateralMovingPerPixel = 0.001;
@@ -120,19 +120,64 @@ int main(int argc, char **argv)
         // Actions
         if (currentStatus == REACHING_BALL && ballPosition[2] != 0)
         {
+            htask.pitch = 45;
             if (ballPosition[0] < ballThresholdLeft * image.cols || ballPosition[0] > ballThresholdRight * image.cols)
             {
                 btask.turn = ((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
-                btask.step = 0.2;
+                btask.step = 0;
             }
             else
             {
-                btask.turn = 0;
-                btask.step = 1;
+                if (ballPosition[1] < ballThresholdBottom * image.cols)
+                {
+                    btask.turn = 0;
+                    btask.step = 1;
+                }
+                else
+                {
+                    btask.turn = 0;
+                    btask.step = 0;
+                    htask.pitch = 0;
+                    currentStatus = KICKING_BALL;
+                }
             }
         }
         else if (currentStatus == KICKING_BALL && (gatePosition[0] != gatePosition[2] && gatePosition[1] != gatePosition[3]))
         {
+            htask.pitch = 0;
+            int gatePositionAvg = (gatePosition[0] + gatePosition[2]) / 2;
+            if (gatePositionAvg < gateThresholdLeft * image.cols || gatePositionAvg > gateThresholdRight * image.cols)
+            {
+                btask.turn = ((0.5 * image.cols - gatePositionAvg) * turningPerPixel);
+                btask.lateral = ((0.5 * image.cols - gatePositionAvg) * lateralMovingPerPixel);
+            }
+            else
+            {
+                btask.step = 0;
+                btask.turn = 0;
+                btask.lateral = 0;
+                btask.type = btask.TASK_ACT;
+                btask.actname = "left_kick";
+                cnt = 0;
+                currentStatus = KICKING_ACTION;
+            }
+        }
+        else if (currentStatus == KICKING_ACTION)
+        {
+            cnt++;
+            if (cnt == 20)
+            {
+                currentStatus = REACHING_BALL;
+                btask.step = 0;
+                btask.turn = 0;
+                btask.lateral = 0;
+            }
+        }
+        else
+        {
+            btask.step = 0;
+            btask.turn = 0;
+            btask.lateral = 0;
         }
 
         bodyTaskNode->Publish(btask);
