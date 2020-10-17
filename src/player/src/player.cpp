@@ -76,7 +76,7 @@ int main(int argc, char **argv)
                 cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
 
                 std::vector<cv::Vec3f> circles;
-                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, );
+                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 5, 220);
             }
             if (currentStatus == KICKING_BALL)
             {
