@@ -64,17 +64,15 @@ int main(int argc, char **argv)
             auto whiteBinImage = image.clone();
             cv::cvtColor(image, whiteBinImage, cv::COLOR_BGR2GRAY);
             cv::GaussianBlur(whiteBinImage, whiteBinImage, cv::Size(5, 5), 3, 3);
-            // auto blackBinImage = whiteBinImage.clone();
-            // cv::threshold(whiteBinImage, whiteBinImage, 180, 255, cv::THRESH_BINARY);
-            // cv::threshold(blackBinImage, blackBinImage, 190, 255, cv::THRESH_BINARY_INV);
-            // auto gateBinImage = whiteBinImage.clone();
+            auto blackBinImage = whiteBinImage.clone();
+            cv::threshold(whiteBinImage, whiteBinImage, 180, 255, cv::THRESH_BINARY);
+            cv::threshold(blackBinImage, blackBinImage, 190, 255, cv::THRESH_BINARY_INV);
+            auto gateBinImage = whiteBinImage.clone();
 
-            // cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
-            // cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
+            cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
+            cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
 
-            auto gateImage = image.clone();
-            cv::Canny(whiteBinImage, gateImage, 75, 225);
-            cv::cvtColor(gateImage, gateImage, cv::COLOR_GRAY2BGR);
+            cv::cvtColor(gateBinImage, gateBinImage, cv::COLOR_GRAY2BGR);
 
             //     ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
             //     linePosition[0] = linePosition[1] = linePosition[2] = linePosition[3] = 0;
@@ -119,7 +117,7 @@ int main(int argc, char **argv)
             //         }
             //     }
             if (robotName.back() == '1')
-                binImgPublisher->Publish(gateImage);
+                binImgPublisher->Publish(gateBinImage);
             resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
         // // Actions
