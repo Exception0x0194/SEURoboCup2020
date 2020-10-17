@@ -8,12 +8,12 @@ enum status
     KICKING_ACTION
 } currentStatus;
 
-const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
+const float ballThresholdLeft = 0.38, ballThresholdRight = 0.45;
 // const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
 const float ballThresholdBottom = 0.8;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.43, gateThresholdRight = 0.57;
-const float turningPerPixel = 0.04, lateralMovingPerPixel = -0.000012;
+const float turningPerPixel = 0.015, lateralMovingPerPixel = -0.00002;
 
 int main(int argc, char **argv)
 {
@@ -71,6 +71,18 @@ int main(int argc, char **argv)
 
             if (currentStatus == REACHING_BALL)
             {
+                // if (imuData.pitch != 40)
+                // {
+                //     htask.pitch = 40;
+                //     btask.type = btask.TASK_WALK;
+                //     btask.step = 0;
+                //     btask.lateral = 0;
+                //     btask.turn = 0;
+                //     bodyTaskNode->Publish(btask);
+                //     headTaskNode->Publish(htask);
+                //     loop_rate.sleep();
+                // }
+
                 auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), ballBinImage = grayImage.clone();
                 cv::threshold(whiteBinImage, whiteBinImage, 220, 255, cv::THRESH_BINARY);
                 cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
@@ -82,7 +94,7 @@ int main(int argc, char **argv)
                 cv::cvtColor(ballBinImage, outputImage, cv::COLOR_GRAY2BGR);
 
                 std::vector<cv::Vec3f> circles;
-                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
+                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 150, 45, 32, 10, 90);
                 if (circles.size())
                 {
                     for (int i = 0; i < circles.size(); i++)
@@ -98,7 +110,7 @@ int main(int argc, char **argv)
                     //TODO
                 }
             }
-            if (1)
+            if (currentStatus == KICKING_BALL)
             {
                 auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), gateBinImage = grayImage.clone();
                 cv::threshold(whiteBinImage, whiteBinImage, 190, 255, cv::THRESH_BINARY_INV);
@@ -142,6 +154,7 @@ int main(int argc, char **argv)
             if (ballPosition[0] < ballThresholdLeft * image.cols || ballPosition[0] > ballThresholdRight * image.cols)
             {
                 btask.turn = ((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
+                btask.turn += (ballThresholdMiddle * image.cols - ballPosition[0] > 0 ? 1 : -1);
                 btask.step = 0;
             }
             else
@@ -149,7 +162,13 @@ int main(int argc, char **argv)
                 if (ballPosition[1] < ballThresholdBottom * image.rows)
                 {
                     btask.turn = 0;
-                    btask.step = (ballPosition[1] < 0.5 * image.rows ? 1 : 0.8);
+                    float pos = ballPosition[1] / image.rows;
+                    if (pos < 0.3)
+                        btask.step = 1;
+                    else if (pos < 0.5)
+                        btask.step = 0.7;
+                    else
+                        btask.step = 0.5;
                 }
                 else
                 {
