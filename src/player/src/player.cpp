@@ -8,11 +8,12 @@ enum status
     KICKING_ACTION
 } currentStatus;
 
-const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
-const float ballThresholdBottom = 0.55;
+//const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
+const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
+const float ballThresholdBottom = 0.65;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
-const float turningPerPixel = 0.035, lateralMovingPerPixel = -0.0003;
+const float turningPerPixel = 0.05, lateralMovingPerPixel = -0.0001;
 
 int main(int argc, char **argv)
 {
@@ -97,8 +98,9 @@ int main(int argc, char **argv)
                 cv::threshold(whiteBinImage, whiteBinImage, 190, 255, cv::THRESH_BINARY_INV);
                 cv::threshold(blackBinImage, blackBinImage, 180, 255, cv::THRESH_BINARY);
                 cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
-                cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(3, 3), 5, 5);
-                cv::threshold(gateBinImage, gateBinImage, 150, 255, cv::THRESH_BINARY);
+                cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(3, 3), 3, 3);
+                cv::threshold(gateBinImage, gateBinImage, 120, 255, cv::THRESH_BINARY);
+                cv::Canny(gateBinImage, gateBinImage, 75, 225);
 
                 std::vector<cv::Vec4i> lines;
                 int lineNumber = 0;
@@ -106,12 +108,14 @@ int main(int argc, char **argv)
                 if (lines.size())
                 {
                     for (int i = 0; i < lines.size(); i++)
-                        if (lines[i][0] != lines[1][2] && (abs(lines[i][1] - lines[i][3]) / abs(lines[i][0] - lines[i][2]) > 0.5))
+                    {
+                        if (lines[i][0] != lines[i][2] && (abs(float(lines[i][1] - lines[i][3]) / (lines[i][0] - lines[i][2])) > 0.5))
                         {
                             gatePosition += lines[i];
                             lineNumber++;
                         }
-                    gatePosition /= lineNumber;
+                    }
+                    gatePosition /= (lineNumber ? lineNumber : 1);
                 }
                 cv::cvtColor(gateBinImage, outputImage, cv::COLOR_GRAY2BGR);
                 for (int i = 0; i < lines.size(); i++)
@@ -170,7 +174,7 @@ int main(int argc, char **argv)
                 btask.turn = ((0.5 * image.cols - gatePositionAvg) * turningPerPixel);
                 btask.lateral = ((0.5 * image.cols - gatePositionAvg) * lateralMovingPerPixel);
             }
-            else if (cnt >= 10)
+            else if (1)
             {
                 btask.step = 0;
                 btask.turn = 0;
