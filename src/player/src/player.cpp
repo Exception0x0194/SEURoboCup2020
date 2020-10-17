@@ -9,7 +9,7 @@ enum status
 } currentStatus;
 
 const float ballThresholdLeft = 0.375, ballThresholdRight = 0.5;
-const float ballThresholdBottom = 0.75;
+const float ballThresholdBottom = 0.7;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
 const float turningPerPixel = 0.03, lateralMovingPerPixel = 0.001;
