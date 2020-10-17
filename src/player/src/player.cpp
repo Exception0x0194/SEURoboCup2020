@@ -63,116 +63,39 @@ int main(int argc, char **argv)
             auto outputImage = image.clone();
             auto imuData = imuSubscriber->GetData();
             auto headAngle = headSubscriber->GetData();
-
-            cv::Mat binImage;
-            cv::cvtColor(image, binImage, cv::COLOR_BGR2GRAY);
-
+            auto grayImage = image.clone();
+            cv::cvtColor(grayImage, grayImage, cv::COLOR_BGR2GRAY);
             ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
             linePosition[0] = linePosition[1] = linePosition[2] = linePosition[3] = 0;
+
             if (currentStatus == REACHING_BALL)
             {
-                auto whiteBinImage = image.clone();
-                cv::cvtColor(image, whiteBinImage, cv::COLOR_BGR2GRAY);
-                auto blackBinImage = whiteBinImage.clone();
-                cv::threshold(whiteBinImage, whiteBinImage, 230, 255, cv::THRESH_BINARY);
+                auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), ballBinImage = grayImage.clone();
+                cv::threshold(whiteBinImage, whiteBinImage, 220, 255, cv::THRESH_BINARY);
                 cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
-                auto ballBinImage = whiteBinImage.clone();
-
                 cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
-                cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(5, 5), 3, 3);
 
                 std::vector<cv::Vec3f> circles;
-                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
-                if (circles.size())
-                {
-                    for (size_t i = 0; i < circles.size(); i++)
-                    {
-                        ballPosition[0] += circles[i][0];
-                        ballPosition[1] += circles[i][1];
-                        ballPosition[2] += circles[i][2];
-                    }
-                    ballPosition[0] /= circles.size(), ballPosition[1] /= circles.size(), ballPosition[2] /= circles.size();
-                    cv::circle(outputImage, cv::Point(ballPosition[0], ballPosition[1]), ballPosition[2], cv::Scalar(255, 0, 0), 5);
-                }
+                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, );
             }
             if (currentStatus == KICKING_BALL)
             {
-                cv::threshold(binImage, binImage, 150, 200, cv::THRESH_BINARY);
-                cv::GaussianBlur(binImage, binImage, cv::Size(5, 5), 3, 3);
-                htask.set__pitch(0);
-                std::vector<cv::Vec4i> lines;
-                cv::HoughLinesP(binImage, lines, 1, CV_PI / 180, 50, 20, 30);
-                if (lines.size())
-                {
-                    for (size_t i = 0; i < lines.size(); i++)
-                    {
-                        linePosition[0] += lines[i][0];
-                        linePosition[1] += lines[i][1];
-                        linePosition[2] += lines[i][2];
-                        linePosition[3] += lines[i][3];
-                    }
-                    linePosition[0] /= lines.size(), linePosition[1] /= lines.size(), linePosition[2] /= lines.size(), linePosition[3] /= lines.size();
-                    cv::line(outputImage, cv::Point(linePosition[0], linePosition[1]), cv::Point(linePosition[2], linePosition[3]), cv::Scalar(0, 255, 255), 5);
-                }
             }
 
-            cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
-            if (robotName.back() == '1')
-                binImgPublisher->Publish(binImage);
+            // cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
+            // if (robotName.back() == '1')
+            //     binImgPublisher->Publish(binImage);
             resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
+
         // Actions
         if (currentStatus == REACHING_BALL && ballPosition[2] != 0)
         {
-            btask.set__type(btask.TASK_WALK);
-            if (ballPosition[1] > ballThresholdBottom * image.rows)
-            {
-                currentStatus = KICKING_BALL;
-                btask.set__step(0);
-                btask.set__turn(0);
-            }
-            if (ballPosition[0] > ballThresholdRight * image.cols || ballPosition[0] < ballThresholdLeft * image.cols)
-            {
-                currentStatus = REACHING_BALL;
-                btask.set__turn((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
-                btask.set__step(0);
-                btask.set__lateral(0);
-            }
-            else
-            {
-                btask.set__turn(0);
-                btask.set__step(1);
-                btask.set__lateral(0);
-            }
         }
         else if (currentStatus == KICKING_BALL && linePosition[0] != 0)
         {
-            cv::Vec2f gatePosition;
-            gatePosition[0] = (linePosition[0] + linePosition[2]) / 2;
-            gatePosition[1] = (linePosition[1] + linePosition[3]) / 2;
-            if (gatePosition[0] > gateThresholdRight * image.cols || gatePosition[0] < gateThresholdLeft * image.cols)
-            {
-                btask.set__turn((0.5 * image.cols - gatePosition[0]) * turningPerPixel); // 0.5 is gateThresholdMiddle
-                btask.set__lateral(-(0.5 * image.cols - gatePosition[0]) * lateralMovingPerPixel);
-                btask.set__step(0);
-            }
-            else
-            {
-                btask.set__type(btask.TASK_ACT);
-                btask.set__actname("left_kick");
-                currentStatus = REACHING_BALL;
-                cnt = 0;
-            }
         }
-        // else if (currentStatus == KICKING_ACTION)
-        // {
-        //     cnt++;
-        //     if (cnt == 10)
-        //     {
-        //         currentStatus = REACHING_BALL;
-        //         btask.set__type(btask.TASK_WALK);
-        //     }
-        // }
+
         bodyTaskNode->Publish(btask);
         headTaskNode->Publish(htask);
         loop_rate.sleep();
