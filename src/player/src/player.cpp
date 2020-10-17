@@ -8,11 +8,11 @@ enum status
     KICKING_ACTION
 } currentStatus;
 
-const float ballThresholdLeft = 0.375, ballThresholdRight = 0.5;
-const float ballThresholdBottom = 0.7;
+const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
+const float ballThresholdBottom = 0.55;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.4375, gateThresholdRight = 0.5625;
-const float turningPerPixel = 0.03, lateralMovingPerPixel = 0.001;
+const float turningPerPixel = 0.035, lateralMovingPerPixel = -0.0003;
 
 int main(int argc, char **argv)
 {
@@ -81,34 +81,47 @@ int main(int argc, char **argv)
                 if (circles.size())
                 {
                     for (int i = 0; i < circles.size(); i++)
+                    {
                         ballPosition += circles[i];
-                    ballPosition /= (int)circles.size();
+                        ballPosition /= (int)circles.size();
+                    }
                 }
                 else
                 {
                     //TODO
                 }
             }
-            if (currentStatus == KICKING_BALL)
+            if (1)
             {
                 auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), gateBinImage = grayImage.clone();
                 cv::threshold(whiteBinImage, whiteBinImage, 190, 255, cv::THRESH_BINARY_INV);
                 cv::threshold(blackBinImage, blackBinImage, 180, 255, cv::THRESH_BINARY);
                 cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
-                cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
+                cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(3, 3), 5, 5);
+                cv::threshold(gateBinImage, gateBinImage, 150, 255, cv::THRESH_BINARY);
 
                 std::vector<cv::Vec4i> lines;
-                cv::HoughLinesP(gateBinImage, lines, 1, CV_PI / 180, 50, 20, 30);
+                int lineNumber = 0;
+                cv::HoughLinesP(gateBinImage, lines, 1, CV_PI / 180, 50, 50, 2);
                 if (lines.size())
                 {
                     for (int i = 0; i < lines.size(); i++)
-                        gatePosition += lines[i];
-                    gatePosition /= (int)lines.size();
+                        if (lines[i][0] != lines[1][2] && (abs(lines[i][1] - lines[i][3]) / abs(lines[i][0] - lines[i][2]) > 0.5))
+                        {
+                            gatePosition += lines[i];
+                            lineNumber++;
+                        }
+                    gatePosition /= lineNumber;
                 }
-                else
+                cv::cvtColor(gateBinImage, outputImage, cv::COLOR_GRAY2BGR);
+                for (int i = 0; i < lines.size(); i++)
                 {
-                    //TODO
+                    cv::line(outputImage, cv::Point(lines[i][0], lines[i][1]), cv::Point(lines[i][2], lines[i][3]), cv::Scalar(255, 255, 0), 5);
                 }
+            }
+            else
+            {
+                //TODO
             }
 
             // cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
@@ -120,7 +133,8 @@ int main(int argc, char **argv)
         // Actions
         if (currentStatus == REACHING_BALL && ballPosition[2] != 0)
         {
-            htask.pitch = 45;
+            htask.pitch = 40;
+            btask.type = btask.TASK_WALK;
             if (ballPosition[0] < ballThresholdLeft * image.cols || ballPosition[0] > ballThresholdRight * image.cols)
             {
                 btask.turn = ((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
@@ -138,20 +152,25 @@ int main(int argc, char **argv)
                     btask.turn = 0;
                     btask.step = 0;
                     htask.pitch = 0;
+                    btask.type = btask.TASK_ACT;
                     currentStatus = KICKING_BALL;
+                    cnt = 0;
                 }
             }
         }
         else if (currentStatus == KICKING_BALL && (gatePosition[0] != gatePosition[2] && gatePosition[1] != gatePosition[3]))
         {
             htask.pitch = 0;
+            btask.turn = 0;
+            btask.step = 0;
+            cnt++;
             int gatePositionAvg = (gatePosition[0] + gatePosition[2]) / 2;
             if (gatePositionAvg < gateThresholdLeft * image.cols || gatePositionAvg > gateThresholdRight * image.cols)
             {
                 btask.turn = ((0.5 * image.cols - gatePositionAvg) * turningPerPixel);
                 btask.lateral = ((0.5 * image.cols - gatePositionAvg) * lateralMovingPerPixel);
             }
-            else
+            else if (cnt >= 10)
             {
                 btask.step = 0;
                 btask.turn = 0;
@@ -165,9 +184,11 @@ int main(int argc, char **argv)
         else if (currentStatus == KICKING_ACTION)
         {
             cnt++;
-            if (cnt == 20)
+            if (1)
             {
                 currentStatus = REACHING_BALL;
+                btask.type = btask.TASK_WALK;
+                htask.pitch = 40;
                 btask.step = 0;
                 btask.turn = 0;
                 btask.lateral = 0;
@@ -175,7 +196,8 @@ int main(int argc, char **argv)
         }
         else
         {
-            btask.step = 0;
+            btask.type = btask.TASK_WALK;
+            btask.step = 1;
             btask.turn = 0;
             btask.lateral = 0;
         }
