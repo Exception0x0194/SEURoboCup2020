@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     common::msg::BodyTask btask;
     common::msg::HeadTask htask;
     btask.type = btask.TASK_WALK;
-    btask.count = 2;
+    btask.count = 1;
     btask.step = 0.03;
     htask.yaw = 0.0;
     htask.pitch = 45.0;
@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     rclcpp::WallRate loop_rate(10.0);
     int cnt = 0;
     cv::Vec3f ballPosition;
-    cv::Vec4i linePosition;
+    cv::Vec4i gatePosition;
 
     while (rclcpp::ok())
     {
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
             auto grayImage = image.clone();
             cv::cvtColor(grayImage, grayImage, cv::COLOR_BGR2GRAY);
             ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
-            linePosition[0] = linePosition[1] = linePosition[2] = linePosition[3] = 0;
+            gatePosition[0] = gatePosition[1] = gatePosition[2] = gatePosition[3] = 0;
 
             if (currentStatus == REACHING_BALL)
             {
@@ -98,7 +98,17 @@ int main(int argc, char **argv)
                 cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
 
                 std::vector<cv::Vec4i> lines;
-                cv::HoughLinesP(gateBinImage, lines, );
+                cv::HoughLinesP(gateBinImage, lines, 1, CV_PI / 180, 50, 20, 30);
+                if (lines.size())
+                {
+                    for (int i = 0; i < lines.size(); i++)
+                        gatePosition += lines[i];
+                    gatePosition /= (int)lines.size();
+                }
+                else
+                {
+                    //TODO
+                }
             }
 
             // cv::cvtColor(binImage, binImage, cv::COLOR_GRAY2BGR);
@@ -110,8 +120,18 @@ int main(int argc, char **argv)
         // Actions
         if (currentStatus == REACHING_BALL && ballPosition[2] != 0)
         {
+            if (ballPosition[0] < ballThresholdLeft * image.cols || ballPosition[0] > ballThresholdRight * image.cols)
+            {
+                btask.turn = ((ballThresholdMiddle * image.cols - ballPosition[0]) * turningPerPixel);
+                btask.step = 0.2;
+            }
+            else
+            {
+                btask.turn = 0;
+                btask.step = 1;
+            }
         }
-        else if (currentStatus == KICKING_BALL && linePosition[0] != 0)
+        else if (currentStatus == KICKING_BALL && (gatePosition[0] != gatePosition[2] && gatePosition[1] != gatePosition[3]))
         {
         }
 
