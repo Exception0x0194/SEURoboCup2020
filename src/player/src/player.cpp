@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     btask.count = 2;
     btask.step = 0.03;
     htask.yaw = 0.0;
-    htask.pitch = 45.0;
+    htask.pitch = 0;
     currentStatus = REACHING_BALL;
     auto bodyTaskNode = std::make_shared<BodyTaskPublisher>(robotName);
     auto headTaskNode = std::make_shared<HeadTaskPublisher>(robotName);
@@ -63,13 +63,18 @@ int main(int argc, char **argv)
 
             auto whiteBinImage = image.clone();
             cv::cvtColor(image, whiteBinImage, cv::COLOR_BGR2GRAY);
-            auto blackBinImage = whiteBinImage.clone();
-            cv::threshold(whiteBinImage, whiteBinImage, 230, 255, cv::THRESH_BINARY);
-            cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
-            auto ballBinImage = whiteBinImage.clone();
+            cv::GaussianBlur(whiteBinImage, whiteBinImage, cv::Size(5, 5), 3, 3);
+            // auto blackBinImage = whiteBinImage.clone();
+            // cv::threshold(whiteBinImage, whiteBinImage, 180, 255, cv::THRESH_BINARY);
+            // cv::threshold(blackBinImage, blackBinImage, 190, 255, cv::THRESH_BINARY_INV);
+            // auto gateBinImage = whiteBinImage.clone();
 
-            cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
-            cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(5, 5), 3, 3);
+            // cv::bitwise_and(whiteBinImage, blackBinImage, gateBinImage);
+            // cv::GaussianBlur(gateBinImage, gateBinImage, cv::Size(5, 5), 3, 3);
+
+            auto gateImage = image.clone();
+            cv::Canny(whiteBinImage, gateImage, 75, 225);
+            cv::cvtColor(gateImage, gateImage, cv::COLOR_GRAY2BGR);
 
             //     ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
             //     linePosition[0] = linePosition[1] = linePosition[2] = linePosition[3] = 0;
@@ -78,20 +83,20 @@ int main(int argc, char **argv)
             //         cv::threshold(binImage, binImage, 230, 255, cv::THRESH_BINARY);
             //         cv::GaussianBlur(binImage, binImage, cv::Size(7, 7), 3, 3);
             //         htask.set__pitch(40);
-            std::vector<cv::Vec3f> circles;
-            cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 5, 220);
-            if (circles.size())
-            {
-                for (size_t i = 0; i < circles.size(); i++)
-                {
-                    // ballPosition[0] += circles[i][0];
-                    // ballPosition[1] += circles[i][1];
-                    // ballPosition[2] += circles[i][2];
-                    cv::circle(outputImage, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(255, 255, 0), 5);
-                }
-                // ballPosition[0] /= circles.size(), ballPosition[1] /= circles.size(), ballPosition[2] /= circles.size();
-                // cv::circle(outputImage, cv::Point(ballPosition[0], ballPosition[1]), ballPosition[2], cv::Scalar(255, 0, 0), 5);
-            }
+            // std::vector<cv::Vec3f> circles;
+            // cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 5, 220);
+            // if (circles.size())
+            // {
+            //     for (size_t i = 0; i < circles.size(); i++)
+            //     {
+            //         // ballPosition[0] += circles[i][0];
+            //         // ballPosition[1] += circles[i][1];
+            //         // ballPosition[2] += circles[i][2];
+            //         cv::circle(outputImage, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(255, 255, 0), 5);
+            //     }
+            //     // ballPosition[0] /= circles.size(), ballPosition[1] /= circles.size(), ballPosition[2] /= circles.size();
+            //     // cv::circle(outputImage, cv::Point(ballPosition[0], ballPosition[1]), ballPosition[2], cv::Scalar(255, 0, 0), 5);
+            // }
             //     }
             //     if (currentStatus == KICKING_BALL)
             //     {
@@ -113,10 +118,8 @@ int main(int argc, char **argv)
             //             cv::line(outputImage, cv::Point(linePosition[0], linePosition[1]), cv::Point(linePosition[2], linePosition[3]), cv::Scalar(0, 255, 255), 5);
             //         }
             //     }
-
-            cv::cvtColor(ballBinImage, ballBinImage, cv::COLOR_GRAY2BGR);
             if (robotName.back() == '1')
-                binImgPublisher->Publish(ballBinImage);
+                binImgPublisher->Publish(gateImage);
             resImgPublisher->Publish(outputImage); // 处理完的图像可以通过该方式发布出去，然后通过rqt中的image_view工具查看
         }
         // // Actions
