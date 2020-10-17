@@ -71,11 +71,18 @@ int main(int argc, char **argv)
             linePosition[0] = linePosition[1] = linePosition[2] = linePosition[3] = 0;
             if (currentStatus == REACHING_BALL)
             {
-                cv::threshold(binImage, binImage, 230, 255, cv::THRESH_BINARY);
-                cv::GaussianBlur(binImage, binImage, cv::Size(7, 7), 3, 3);
-                htask.set__pitch(40);
+                auto whiteBinImage = image.clone();
+                cv::cvtColor(image, whiteBinImage, cv::COLOR_BGR2GRAY);
+                auto blackBinImage = whiteBinImage.clone();
+                cv::threshold(whiteBinImage, whiteBinImage, 230, 255, cv::THRESH_BINARY);
+                cv::threshold(blackBinImage, blackBinImage, 30, 255, cv::THRESH_BINARY_INV);
+                auto ballBinImage = whiteBinImage.clone();
+
+                cv::bitwise_or(whiteBinImage, blackBinImage, ballBinImage);
+                cv::GaussianBlur(ballBinImage, ballBinImage, cv::Size(5, 5), 3, 3);
+
                 std::vector<cv::Vec3f> circles;
-                cv::HoughCircles(binImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
+                cv::HoughCircles(ballBinImage, circles, cv::HOUGH_GRADIENT, 1, 100, 45, 30, 10, 220);
                 if (circles.size())
                 {
                     for (size_t i = 0; i < circles.size(); i++)
