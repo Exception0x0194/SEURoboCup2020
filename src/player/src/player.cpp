@@ -10,10 +10,10 @@ enum status
 
 const float ballThresholdLeft = 0.375, ballThresholdRight = 0.47;
 // const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
-const float ballThresholdBottom = 0.6;
+const float ballThresholdBottom = 0.8;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.43, gateThresholdRight = 0.57;
-const float turningPerPixel = 0.05, lateralMovingPerPixel = -0.000012;
+const float turningPerPixel = 0.04, lateralMovingPerPixel = -0.000012;
 
 int main(int argc, char **argv)
 {
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             ballPosition[0] = ballPosition[1] = ballPosition[2] = 0;
             gatePosition[0] = gatePosition[1] = gatePosition[2] = gatePosition[3] = 0;
 
-            if (1)
+            if (currentStatus == REACHING_BALL)
             {
                 auto whiteBinImage = grayImage.clone(), blackBinImage = grayImage.clone(), ballBinImage = grayImage.clone();
                 cv::threshold(whiteBinImage, whiteBinImage, 220, 255, cv::THRESH_BINARY);
@@ -87,8 +87,6 @@ int main(int argc, char **argv)
                 {
                     for (int i = 0; i < circles.size(); i++)
                     {
-                        ballPosition += circles[i];
-                        ballPosition /= (int)circles.size();
                         if (ballPosition[2] == 0 || circles[i][1] > ballPosition[1])
                             ballPosition = circles[i];
                         cv::circle(outputImage, cv::Point(circles[i][0], circles[i][1]), circles[i][2], cv::Scalar(0, 255, 255), 5);
@@ -148,10 +146,10 @@ int main(int argc, char **argv)
             }
             else
             {
-                if (ballPosition[1] < ballThresholdBottom * image.cols)
+                if (ballPosition[1] < ballThresholdBottom * image.rows)
                 {
                     btask.turn = 0;
-                    btask.step = 1;
+                    btask.step = (ballPosition[1] < 0.5 * image.rows ? 1 : 0.8);
                 }
                 else
                 {
