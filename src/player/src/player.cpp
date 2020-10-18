@@ -10,10 +10,10 @@ enum status
 
 const float ballThresholdLeft = 0.38, ballThresholdRight = 0.44;
 // const float ballThresholdLeft = 0.4375, ballThresholdRight = 0.5625;
-const float ballThresholdBottom = 0.75;
+const float ballThresholdBottom = 0.78;
 const float ballThresholdMiddle = (ballThresholdLeft + ballThresholdRight) / 2;
 const float gateThresholdLeft = 0.45, gateThresholdRight = 0.55;
-const float turningPerPixel = 0.02, lateralMovingPerPixel = -0.000025;
+const float turningPerPixel = 0.02, lateralMovingPerPixel = -0.00004;
 
 int main(int argc, char **argv)
 {
@@ -190,6 +190,8 @@ int main(int argc, char **argv)
             {
                 btask.turn = ((0.5 * image.cols - gatePositionAvg) * turningPerPixel);
                 btask.lateral = ((0.5 * image.cols - gatePositionAvg) * lateralMovingPerPixel);
+                if (btask.lateral > 0.05)
+                    btask.lateral = 0.05;
             }
             else if (1)
             {
